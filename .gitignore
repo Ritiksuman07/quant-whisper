@@ -11,3 +11,4 @@ __pycache__/
 *.pyc
 runs/
 quantflow.duckdb
+quant_whisperer.db

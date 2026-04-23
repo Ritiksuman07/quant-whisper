@@ -1,113 +1,110 @@
-# QuantFlow
+﻿# Quant Whisperer
 
-Open-source agentic framework for quantitative finance: thesis -> data agents -> strategy -> deterministic backtest -> DuckDB analytics.
+Terminal-native algorithmic trading execution engine built in Go with local-first AI inference, deterministic execution controls, and SQLite-backed paper/live trade history.
 
-![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)
-![Go](https://img.shields.io/badge/Go-TUI%20Interface-00ADD8?logo=go&logoColor=white)
-![Rust](https://img.shields.io/badge/Rust-Engine%20Scaffold-000000?logo=rust&logoColor=white)
-![DuckDB](https://img.shields.io/badge/DuckDB-Analytics-FFF000?logo=duckdb&logoColor=black)
+Tagline: **"A hedge fund on your local machine. BYOB."**
 
-## Repository Metadata
+## What Is Implemented
 
-Use `scripts/set_github_metadata.ps1` to set GitHub description, homepage, and topics in one shot:
+- P0 core loop with paper trading simulator.
+- Broker adapter normalization layer for `zerodha`, `dhan`, and `ib` payload shapes.
+- Local LLM processing via Ollama (`qwen3:0.8b` default).
+- Strict JSON decision protocol:
 
-```powershell
-$env:GITHUB_TOKEN="YOUR_PAT"
-.\scripts\set_github_metadata.ps1
+```json
+{"action":"BUY|SELL|HOLD","confidence":0.0,"reasoning":"brief string"}
 ```
 
-## Demo
+- SQLite persistence for:
+  - `decisions`
+  - `paper_trades`
+  - `live_trades`
+  - `pnl_history`
+- P1 execution wall for live trading:
+  - confidence threshold gate
+  - max daily drawdown kill-switch
+  - max trades/minute limiter
+  - hard position size cap
+- Bubble Tea live dashboard with broker status, ticker stream, confidence, trades, and P&L.
+- P2 strategy injection from plain text files.
+- Optional cloud fallback (OpenAI / Anthropic / DeepSeek) when local inference is unavailable.
 
-![QuantFlow demo](assets/quantflow-demo.gif)
+## Important Implementation Note
 
-Sample output artifacts from:
-
-```bash
-python -m quantflow run "short small-cap biotech on FDA rejection patterns" --ticker XBI --offline --verbose
-```
-
-### Equity Curve (Generated)
-
-![QuantFlow equity curve](assets/equity_curve_example.svg)
-
-### DuckDB Backtest Snapshot
-
-```text
-| run_id           | ticker | side  | sharpe  | max_drawdown | calmar  |
-| ---------------- | ------ | ----- | ------- | ------------ | ------- |
-| 20260422T235445Z | XBI    | short | -1.9527 | -0.3193      | -0.9041 |
-| 20260422T233723Z | XBI    | short | -1.9527 | -0.3193      | -0.9041 |
-```
-
-## What Is In This Repo
-
-- **Python core (`quantflow/`)**: SEC + Reddit agents, strategy orchestration, backtest runtime, report generation.
-- **Go interface (`cmd/`, `internal/quantflowui/`)**: interactive Bubble Tea TUI to run and monitor the full pipeline.
-- **Rust scaffold (`engine-rs/`)**: JSON-driven deterministic backtest binary for low-latency evolution.
-- **DuckDB layer**: persisted filings, sentiment, strategies, and backtest metrics.
+The current broker adapters include schema normalization and deterministic order flow hooks, while market data/order execution are simulated for local development. This keeps the architecture broker-ready without exposing API credentials externally.
 
 ## Quick Start
 
-```bash
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-python -m quantflow run "short small-cap biotech on FDA rejection patterns" --ticker XBI --offline --verbose
+```powershell
+go mod tidy
+go run . paper --broker zerodha --symbol NIFTY50 --max-ticks 120
 ```
 
-Artifacts are stored in `runs/<run_id>/` and analytics in `quantflow.duckdb`.
+## Commands
 
-## Go TUI (Bubble Tea)
+- `go run . paper [flags]`
+- `go run . live [flags]`
+- `go run . run --mode paper|live [flags]`
+- `go run . tui --mode paper|live [flags]`
 
-The TUI gives a live, demo-friendly view of pipeline stages and streaming logs.
+Useful flags:
 
-```bash
-go run . tui
+- `--broker zerodha|dhan|ib`
+- `--symbol NIFTY50`
+- `--db quant_whisperer.db`
+- `--confidence-threshold 0.85`
+- `--max-drawdown 3`
+- `--max-trades-per-minute 3`
+- `--position-size 10`
+- `--capital 100000`
+- `--tick-interval-ms 1000`
+- `--max-ticks 120`
+- `--strategy-file .\strategy.txt`
+- `--ollama-url http://localhost:11434`
+- `--ollama-model qwen3:0.8b`
+- `--cloud-fallback`
+- `--cloud-provider openai|anthropic|deepseek`
+- `--cloud-model gpt-4o-mini`
+- `--cloud-api-key <key>`
+
+## BYOB Credentials (Local Only)
+
+Set credentials in local environment variables:
+
+- Zerodha: `ZERODHA_API_KEY`, `ZERODHA_API_SECRET`, `ZERODHA_ACCESS_TOKEN`
+- Dhan: `DHAN_API_KEY`, `DHAN_API_SECRET`, `DHAN_ACCESS_TOKEN`
+- Interactive Brokers: `IB_API_KEY`, `IB_API_SECRET`, `IB_ACCESS_TOKEN`
+
+Cloud fallback (optional):
+
+- `QW_ENABLE_CLOUD_FALLBACK=true`
+- `QW_CLOUD_PROVIDER=openai` (or `anthropic`, `deepseek`)
+- `QW_CLOUD_MODEL=gpt-4o-mini`
+- `QW_CLOUD_API_KEY=...`
+
+## Strategy Injection
+
+Create a plain text strategy file and pass it into runtime prompts:
+
+```text
+Look for mean reversion after a sharp intraday drop with volume spike confirmation.
 ```
 
-Key controls:
+Run with:
 
-- `tab` / `up` / `down`: switch input field
-- `o`: toggle offline fixture mode
-- `enter`: run pipeline
-- `r`: rerun with current inputs
-- `q`: quit
-
-## Go CLI Wrapper
-
-Run the Python pipeline through Go (useful for demos and automation):
-
-```bash
-go run . run "short small-cap biotech on FDA rejection patterns" --ticker XBI --offline --verbose
+```powershell
+go run . paper --strategy-file .\strategy.txt
 ```
 
-## Architecture
+## Data and Security Posture
 
-1. SEC Filing Agent fetches and scores `10-K`, `10-Q`, `8-K` signals.
-2. Reddit Sentiment Agent measures ticker mention velocity and sentiment.
-3. Strategy Orchestrator converts thesis + signals into executable strategy rules.
-4. Backtest Engine computes Sharpe, max drawdown, Calmar, CAGR, return series.
-5. DuckDB captures intermediate and final outputs for reproducible analysis.
-6. Artifact exporter writes `report.json`, strategy code, run README, and chart.
-
-## AI Engineering Notes
-
-- Current implementation uses a deterministic strategy-orchestration policy for reproducibility.
-- LLM slot is intentionally isolated in `quantflow/agents/strategy.py` to swap in Claude/GPT orchestration.
-- DuckDB acts as the memory/analytics substrate so future LLM reasoning can query run history without refetching raw data.
-
-## Strategic Direction
-
-QuantFlow is positioned as an open foundational engine for production-grade systematic research workflows, including startup-scale commercialization paths (managed execution + strategy registry).
-
-See:
-
-- `docs/axiom-positioning.md`
-- `docs/architecture-deep-dive.md`
+- API keys are read from local env vars only.
+- Local model inference is default.
+- Cloud inference is opt-in only.
+- Trade and P&L history is written to local SQLite only.
 
 ## Development
 
-```bash
-pytest -q
+```powershell
 go test ./...
 ```

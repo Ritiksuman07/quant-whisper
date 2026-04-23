@@ -8,11 +8,9 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "quantflow",
-	Short: "Agentic quantitative finance framework",
-	Long: "QuantFlow provides an end-to-end agentic pipeline for quantitative finance.\n" +
-		"It combines SEC filing signals, Reddit sentiment, strategy generation,\n" +
-		"backtesting, and DuckDB analytics.",
+	Use:   "quant-whisper",
+	Short: "Terminal-native algorithmic execution engine",
+	Long:  "Quant Whisperer runs local-model-driven paper and live trading workflows with broker adapters, risk controls, and SQLite trade logs.",
 }
 
 func Execute() {
@@ -24,5 +22,7 @@ func Execute() {
 
 func init() {
 	rootCmd.AddCommand(runCmd)
+	rootCmd.AddCommand(paperCmd)
+	rootCmd.AddCommand(liveCmd)
 	rootCmd.AddCommand(tuiCmd)
 }

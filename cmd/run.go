@@ -1,50 +1,33 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
-	"strconv"
+	"strings"
 
+	"github.com/ritiksuman07/quantflow/internal/quantwhisperer"
 	"github.com/spf13/cobra"
 )
 
 var (
-	runTicker      string
-	runLookback    int
-	runOfflineMode bool
-	runVerbose     bool
+	runMode  string
+	runFlags = defaultRuntimeFlags(quantwhisperer.ModePaper)
 )
 
 var runCmd = &cobra.Command{
-	Use:   "run [thesis]",
-	Short: "Run QuantFlow pipeline through the Python orchestrator",
-	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		thesis := args[0]
-		pythonArgs := []string{
-			"-m",
-			"quantflow",
-			"run",
-			thesis,
-			"--lookback-days",
-			strconv.Itoa(runLookback),
+	Use:   "run",
+	Short: "Run Quant Whisperer in paper or live mode",
+	RunE: func(cmd *cobra.Command, _ []string) error {
+		mode := quantwhisperer.Mode(strings.ToLower(strings.TrimSpace(runMode)))
+		if mode != quantwhisperer.ModePaper && mode != quantwhisperer.ModeLive {
+			return fmt.Errorf("invalid mode %q (use paper or live)", runMode)
 		}
-		if runTicker != "" {
-			pythonArgs = append(pythonArgs, "--ticker", runTicker)
-		}
-		if runOfflineMode {
-			pythonArgs = append(pythonArgs, "--offline")
-		}
-		if runVerbose {
-			pythonArgs = append(pythonArgs, "--verbose")
-		}
-		fmt.Fprintf(cmd.OutOrStdout(), "Running: python %s\n", joinArgs(pythonArgs))
-		return runPythonCommand(pythonArgs...)
+		opts := buildOptions(mode, runFlags)
+		return runSession(context.Background(), mode, opts, cmd.OutOrStdout())
 	},
 }
 
 func init() {
-	runCmd.Flags().StringVar(&runTicker, "ticker", "", "override inferred ticker symbol")
-	runCmd.Flags().IntVar(&runLookback, "lookback-days", 252, "number of daily bars for backtest")
-	runCmd.Flags().BoolVar(&runOfflineMode, "offline", false, "disable external API calls")
-	runCmd.Flags().BoolVar(&runVerbose, "verbose", true, "print stage-by-stage progress logs")
+	runCmd.Flags().StringVar(&runMode, "mode", "paper", "run mode (paper|live)")
+	bindRuntimeFlags(runCmd.Flags(), &runFlags)
 }
