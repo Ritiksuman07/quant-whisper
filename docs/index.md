@@ -1,45 +1,42 @@
 ---
 layout: default
-title: "portman ? terminal port & process manager (TUI)"
-description: "A fast, terminal-native port and process manager for developers."
+title: "QuantFlow Documentation"
+description: "Agentic quantitative finance framework with Python orchestration, Go TUI, Rust scaffold, and DuckDB analytics."
 ---
 
 <div class="hero">
-  <h1>portman</h1>
-  <p>Local ports, processes, and profiles ? all in one fast TUI. See what is running, which ports are bound, and act instantly.</p>
+  <h1>QuantFlow</h1>
+  <p>Open-source agentic quantitative finance pipeline from natural-language thesis to reproducible backtest artifacts.</p>
   <div class="badges">
-    <div class="badge">Go 1.22+</div>
-    <div class="badge">macOS ? Linux ? WSL</div>
-    <div class="badge">MIT License</div>
+    <div class="badge">Python Orchestration</div>
+    <div class="badge">Go Bubble Tea TUI</div>
+    <div class="badge">Rust Engine Scaffold</div>
+    <div class="badge">DuckDB Analytics</div>
   </div>
 </div>
 
 <div class="media">
-  <img src="../assets/portman-screenshot.png" alt="portman terminal UI screenshot" />
+  <img src="../assets/equity_curve_example.svg" alt="QuantFlow generated equity curve example" />
 </div>
 
 <section>
-  <h2>Install</h2>
-  <pre><code>go install github.com/ritiksuman07/portman@latest</code></pre>
+  <h2>Quick Commands</h2>
+  <pre><code>python -m quantflow run "short small-cap biotech on FDA rejection patterns" --ticker XBI --offline --verbose</code></pre>
+  <pre><code>go run . tui</code></pre>
 </section>
 
 <section>
-  <h2>Quick Start</h2>
-  <pre><code>portman</code></pre>
-</section>
-
-<section>
-  <h2>Docs</h2>
+  <h2>Documentation</h2>
   <ul>
     <li><a href="getting-started.html">Getting Started</a></li>
     <li><a href="usage.html">Usage</a></li>
-    <li><a href="profiles.html">Profiles</a></li>
-    <li><a href="faq.html">FAQ</a></li>
-    <li><a href="roadmap.html">Roadmap</a></li>
+    <li><a href="axiom-positioning.html">Axiom Positioning</a></li>
+    <li><a href="architecture-deep-dive.html">Architecture Deep Dive</a></li>
+    <li><a href="llm-duckdb.html">LLM + DuckDB Design</a></li>
   </ul>
 </section>
 
 <section>
-  <h2>Repo</h2>
-  <p><a href="https://github.com/Ritiksuman07/Portman">GitHub: Ritiksuman07/Portman</a></p>
+  <h2>Repository</h2>
+  <p><a href="https://github.com/Ritiksuman07/quantflow">GitHub: Ritiksuman07/quantflow</a></p>
 </section>

@@ -1,7 +1,7 @@
 package main
 
-import "github.com/ritiksuman07/portman/cmd"
+import "github.com/ritiksuman07/quantflow/cmd"
 
 func main() {
-    cmd.Execute()
+	cmd.Execute()
 }

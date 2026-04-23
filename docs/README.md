@@ -1,12 +1,11 @@
-# Docs
+# QuantFlow Docs
 
-Welcome to the portman documentation hub.
+Welcome to the QuantFlow documentation hub.
 
 ## Sections
 
-- Getting Started
-- Usage
-- Profiles
-- FAQ
-- Roadmap
-- Contributing
+- [Quick Start](getting-started.md)
+- [Pipeline Usage](usage.md)
+- [Axiom Positioning](axiom-positioning.md)
+- [Architecture Deep Dive](architecture-deep-dive.md)
+- [LLM + DuckDB Design](llm-duckdb.md)

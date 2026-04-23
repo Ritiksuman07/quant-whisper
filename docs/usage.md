@@ -1,25 +1,45 @@
 # Usage
 
-## Launch
+## Python CLI
 
 ```bash
-portman
+python -m quantflow run "<thesis>" --ticker XBI --lookback-days 252 --offline --verbose
 ```
+
+Flags:
+
+- `--ticker`: override ticker inference
+- `--lookback-days`: control bar count for backtest
+- `--offline`: deterministic fixture mode
+- `--verbose`: print stage-by-stage progress
+
+## Go CLI Wrapper
 
 ```bash
-portman run --refresh 2
+go run . run "<thesis>" --ticker XBI --offline --verbose
 ```
 
-## Keybindings
+## Go Bubble Tea TUI
 
-- `j` / `k` or arrow keys: move
-- `g` / `G`: jump to top / bottom
-- `/`: filter by name or port
-- `x`: kill process (confirm)
-- `r`: restart process (confirm)
-- `d`: toggle detail panel
-- `tab`: switch Processes / Profiles
-- `n`: new profile (Profiles tab)
-- `enter`: launch profile (Profiles tab)
-- `?`: help
+```bash
+go run . tui
+```
+
+### TUI Controls
+
+- `tab` / `up` / `down`: switch focused input
+- `o`: toggle offline mode
+- `enter`: run pipeline
+- `r`: rerun
 - `q`: quit
+
+## DuckDB Queries
+
+Example:
+
+```sql
+SELECT run_id, ticker, sharpe, max_drawdown, calmar
+FROM backtests
+ORDER BY run_id DESC
+LIMIT 10;
+```

@@ -1,40 +1,42 @@
 # Getting Started
 
-portman is a terminal-first port and process manager built for developers.
+QuantFlow turns a natural-language trading thesis into reproducible research artifacts.
 
 ## Requirements
 
-- Go 1.22+ (for building from source)
-- Terminal with 256-color support
+- Python 3.11+
+- Go 1.22+ (for the Bubble Tea TUI)
+- Rust toolchain (optional, for `engine-rs/`)
 
 ## Install
 
-### macOS / Linux (Homebrew)
-
 ```bash
-brew install ritiksuman07/tap/portman
+git clone https://github.com/Ritiksuman07/quantflow.git
+cd quantflow
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
 ```
 
-### Go install
+## First Pipeline Run
 
 ```bash
-go install github.com/ritiksuman07/portman@latest
+python -m quantflow run "short small-cap biotech on FDA rejection patterns" --ticker XBI --offline --verbose
 ```
 
-### From source
+Artifacts:
+
+- `runs/<run_id>/report.json`
+- `runs/<run_id>/README.md`
+- `runs/<run_id>/equity_curve.svg`
+- `runs/<run_id>/strategy.py`
+
+Analytics DB:
+
+- `quantflow.duckdb`
+
+## First TUI Run
 
 ```bash
-git clone git@github.com:Ritiksuman07/Portman.git
-cd Portman
-
-go build ./...
-./portman
+go run . tui
 ```
-
-## First Run
-
-```bash
-portman
-```
-
-Use `?` to open keybind help.

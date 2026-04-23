@@ -1,5 +1,12 @@
 # Contributing
 
-Please see the main contribution guide:
+Please see the root contribution guide:
 
 - `../CONTRIBUTING.md`
+
+Recommended local checks before opening a PR:
+
+```bash
+pytest -q
+go test ./...
+```

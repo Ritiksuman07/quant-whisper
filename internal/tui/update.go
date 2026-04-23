@@ -10,8 +10,8 @@ import (
     tea "github.com/charmbracelet/bubbletea"
     "github.com/charmbracelet/bubbles/key"
 
-    "github.com/ritiksuman07/portman/internal/process"
-    "github.com/ritiksuman07/portman/internal/profiles"
+    "github.com/ritiksuman07/quantflow/internal/process"
+    "github.com/ritiksuman07/quantflow/internal/profiles"
 )
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {

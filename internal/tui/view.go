@@ -6,7 +6,7 @@ import (
 
     "github.com/charmbracelet/lipgloss"
 
-    "github.com/ritiksuman07/portman/internal/util"
+    "github.com/ritiksuman07/quantflow/internal/util"
 )
 
 var (

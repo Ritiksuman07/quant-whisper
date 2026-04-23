@@ -43,6 +43,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="HTTP user-agent used for SEC and Reddit requests.",
         default="QuantFlow/0.1 (contact: quantflow@example.com)",
     )
+    run_parser.add_argument(
+        "--verbose",
+        help="Print stage-by-stage orchestration logs.",
+        action="store_true",
+    )
 
     return parser
 
@@ -59,7 +64,13 @@ def main(argv: list[str] | None = None) -> int:
             offline_mode=bool(args.offline),
         )
         orchestrator = QuantFlowOrchestrator(config)
-        result = orchestrator.run(thesis=args.thesis, ticker=args.ticker, lookback_days=args.lookback_days)
+        progress_hook = print if args.verbose else None
+        result = orchestrator.run(
+            thesis=args.thesis,
+            ticker=args.ticker,
+            lookback_days=args.lookback_days,
+            progress=progress_hook,
+        )
         print(f"QuantFlow run complete: {result.run_id}")
         print(f"Ticker: {result.ticker}")
         print(f"Output: {result.output_dir}")

@@ -1,4 +1,4 @@
-module github.com/ritiksuman07/portman
+module github.com/ritiksuman07/quantflow
 
 go 1.23.0
 

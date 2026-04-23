@@ -13,9 +13,9 @@ import (
     tea "github.com/charmbracelet/bubbletea"
     "github.com/charmbracelet/lipgloss"
 
-    "github.com/ritiksuman07/portman/internal/process"
-    "github.com/ritiksuman07/portman/internal/profiles"
-    "github.com/ritiksuman07/portman/internal/util"
+    "github.com/ritiksuman07/quantflow/internal/process"
+    "github.com/ritiksuman07/quantflow/internal/profiles"
+    "github.com/ritiksuman07/quantflow/internal/util"
 )
 
 type tab int

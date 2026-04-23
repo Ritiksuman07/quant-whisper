@@ -1,0 +1,14 @@
+repository:
+  name: quantflow
+  description: "Agentic quantitative finance framework with SEC + Reddit agents, deterministic backtesting, and DuckDB analytics."
+  homepage: "https://github.com/Ritiksuman07/quantflow#readme"
+  has_issues: true
+  has_projects: true
+  has_wiki: false
+  default_branch: main
+  topics:
+    - quantitative-finance
+    - algorithmic-trading
+    - llm-agents
+    - duckdb
+    - backtesting
