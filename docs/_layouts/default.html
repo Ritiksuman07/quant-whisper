@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ page.title | default: site.title }}</title>
+    <meta name="description" content="{{ page.description | default: site.description }}" />
+    <meta name="keywords" content="terminal process manager, port manager, TUI, CLI tool, developer productivity, Go, Bubbletea, Lipgloss, gopsutil" />
+    <link rel="canonical" href="{{ site.url }}{{ site.baseurl }}{{ page.url }}" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="{{ page.title | default: site.title }}" />
+    <meta property="og:description" content="{{ page.description | default: site.description }}" />
+    <meta property="og:url" content="{{ site.url }}{{ site.baseurl }}{{ page.url }}" />
+    <meta property="og:image" content="https://raw.githubusercontent.com/Ritiksuman07/Portman/master/assets/portman-screenshot.png" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="{{ page.title | default: site.title }}" />
+    <meta name="twitter:description" content="{{ page.description | default: site.description }}" />
+    <meta name="twitter:image" content="https://raw.githubusercontent.com/Ritiksuman07/Portman/master/assets/portman-screenshot.png" />
+
+    <link rel="stylesheet" href="{{ site.baseurl }}/assets/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      {{ content }}
+    </div>
+  </body>
+</html>

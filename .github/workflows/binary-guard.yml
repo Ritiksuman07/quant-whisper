@@ -1,0 +1,20 @@
+name: Binary Guard
+
+on:
+  pull_request:
+
+jobs:
+  check-binaries:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Block common binary types
+        run: |
+          set -e
+          banned=$(git ls-files | grep -Ei "\.(exe|dll|so|dylib|bin|bat|ps1|sh)$" || true)
+          if [ -n "$banned" ]; then
+            echo "Binary or script files detected in repo:" 
+            echo "$banned"
+            echo "If these are required, discuss in PR and whitelist explicitly."
+            exit 1
+          fi

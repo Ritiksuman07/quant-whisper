@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "quantflow"
+version = "0.1.0"
+description = "Autonomous agentic framework prototype for quantitative finance."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "duckdb>=1.4.0",
+  "requests>=2.32.0",
+]
+
+[project.scripts]
+quantflow = "quantflow.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["quantflow*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

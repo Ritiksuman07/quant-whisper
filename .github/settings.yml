@@ -1,0 +1,18 @@
+repository:
+  name: quant-whisper
+  description: "Terminal-native algorithmic trading engine with local-first LLM inference, deterministic execution walls, and SQLite audit trails."
+  homepage: "https://github.com/Ritiksuman07/quant-whisper#readme"
+  has_issues: true
+  has_projects: true
+  has_wiki: false
+  default_branch: main
+  topics:
+    - quant-trading
+    - algorithmic-trading
+    - ollama
+    - bubbletea
+    - sqlite
+    - golang
+    - local-llm
+    - terminal-ui
+    - backtesting

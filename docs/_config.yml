@@ -1,0 +1,5 @@
+title: "portman"
+description: "Terminal-native port and process manager for developers"
+url: "https://ritiksuman07.github.io"
+baseurl: "/Portman"
+markdown: kramdown
