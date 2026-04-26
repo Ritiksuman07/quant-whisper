@@ -3,6 +3,7 @@ package quantwhisperui
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/spinner"
@@ -10,6 +11,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 
 	"github.com/ritiksuman07/quantflow/internal/quantwhisperer"
+	"github.com/ritiksuman07/quantflow/internal/quantwhisperer/broker"
 	"github.com/ritiksuman07/quantflow/internal/quantwhisperer/config"
 	"github.com/ritiksuman07/quantflow/internal/quantwhisperer/engine"
 )
@@ -28,6 +30,9 @@ type sessionDoneMsg struct {
 
 type model struct {
 	options config.Options
+	broker  broker.Client
+	data    engine.MarketDataProvider
+	logger  *slog.Logger
 
 	eventCh <-chan quantwhisperer.Event
 	doneCh  <-chan error
@@ -47,13 +52,16 @@ type model struct {
 	spinner      spinner.Model
 }
 
-func newModel(options config.Options) model {
+func newModel(options config.Options, brokerClient broker.Client, marketData engine.MarketDataProvider, logger *slog.Logger) model {
 	spin := spinner.New()
 	spin.Spinner = spinner.Dot
 	spin.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("81"))
 
 	return model{
 		options:      options,
+		broker:       brokerClient,
+		data:         marketData,
+		logger:       logger,
 		status:       "initializing session",
 		tradeHistory: make([]quantwhisperer.Trade, 0, 8),
 		logLines:     make([]string, 0, 14),
@@ -67,7 +75,7 @@ func (m model) Init() tea.Cmd {
 
 func (m model) startSessionCmd() tea.Cmd {
 	return func() tea.Msg {
-		session, err := engine.NewSession(m.options)
+		session, err := engine.NewSession(m.options, m.broker, m.data, m.logger)
 		if err != nil {
 			return sessionDoneMsg{err: err}
 		}

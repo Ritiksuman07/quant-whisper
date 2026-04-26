@@ -22,7 +22,12 @@ var tuiCmd = &cobra.Command{
 			mode = quantwhisperer.ModePaper
 		}
 		opts := buildOptions(mode, tuiFlags)
-		return quantwhisperui.Run(opts)
+		logger := newLogger(tuiFlags.logFormat)
+		brokerClient, marketData, err := buildSessionDependencies(mode, opts, logger)
+		if err != nil {
+			return err
+		}
+		return quantwhisperui.Run(opts, brokerClient, marketData, logger)
 	},
 }
 

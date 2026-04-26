@@ -1,14 +1,18 @@
 repository:
-  name: quantflow
-  description: "Agentic quantitative finance framework with SEC + Reddit agents, deterministic backtesting, and DuckDB analytics."
-  homepage: "https://github.com/Ritiksuman07/quantflow#readme"
+  name: quant-whisper
+  description: "Terminal-native algorithmic trading engine with local-first LLM inference, deterministic execution walls, and SQLite audit trails."
+  homepage: "https://github.com/Ritiksuman07/quant-whisper#readme"
   has_issues: true
   has_projects: true
   has_wiki: false
   default_branch: main
   topics:
-    - quantitative-finance
+    - quant-trading
     - algorithmic-trading
-    - llm-agents
-    - duckdb
+    - ollama
+    - bubbletea
+    - sqlite
+    - golang
+    - local-llm
+    - terminal-ui
     - backtesting

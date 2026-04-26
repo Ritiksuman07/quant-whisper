@@ -14,7 +14,7 @@ var liveCmd = &cobra.Command{
 	Short: "Run live mode with execution wall and risk kill-switches",
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		opts := buildOptions(quantwhisperer.ModeLive, liveFlags)
-		return runSession(context.Background(), quantwhisperer.ModeLive, opts, cmd.OutOrStdout())
+		return runSession(context.Background(), quantwhisperer.ModeLive, opts, cmd.OutOrStdout(), liveFlags.logFormat)
 	},
 }
 

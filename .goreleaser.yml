@@ -1,4 +1,4 @@
-project_name: portman
+project_name: quant-whisper
 
 before:
   hooks:
@@ -6,12 +6,13 @@ before:
 
 builds:
   - main: ./
-    binary: portman
+    binary: quant-whisper
     env:
       - CGO_ENABLED=0
     goos:
       - linux
       - darwin
+      - windows
     goarch:
       - amd64
       - arm64
@@ -19,12 +20,3 @@ builds:
 archives:
   - format: tar.gz
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-
-brews:
-  - name: portman
-    tap:
-      owner: ritiksuman07
-      name: homebrew-tap
-    homepage: "https://github.com/Ritiksuman07/Portman"
-    description: "Local port and process manager for developers"
-    license: "MIT"

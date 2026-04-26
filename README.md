@@ -4,6 +4,8 @@ Terminal-native algorithmic trading execution engine built in Go with local-firs
 
 Tagline: **"A hedge fund on your local machine. BYOB."**
 
+![Quant Whisperer Demo](assets/quant-whisper-demo.gif)
+
 ## What Is Implemented
 
 - P0 core loop with paper trading simulator.
@@ -66,6 +68,7 @@ Useful flags:
 - `--cloud-provider openai|anthropic|deepseek`
 - `--cloud-model gpt-4o-mini`
 - `--cloud-api-key <key>`
+- `--log-format text|json`
 
 ## BYOB Credentials (Local Only)
 

@@ -14,7 +14,7 @@ import (
 type Client interface {
 	Name() string
 	Connect(context.Context, quantwhisperer.Credentials, quantwhisperer.Mode) error
-	StreamTicks(context.Context, string, time.Duration, int) (<-chan quantwhisperer.Tick, <-chan error)
+	SubscribeWebSocket(context.Context, string, time.Duration, int) (<-chan quantwhisperer.Tick, <-chan error)
 	PlaceOrder(context.Context, quantwhisperer.Trade) error
 }
 
@@ -85,7 +85,7 @@ func (s *simulatedAdapter) Connect(_ context.Context, creds quantwhisperer.Crede
 	return nil
 }
 
-func (s *simulatedAdapter) StreamTicks(ctx context.Context, symbol string, interval time.Duration, maxTicks int) (<-chan quantwhisperer.Tick, <-chan error) {
+func (s *simulatedAdapter) SubscribeWebSocket(ctx context.Context, symbol string, interval time.Duration, maxTicks int) (<-chan quantwhisperer.Tick, <-chan error) {
 	ticks := make(chan quantwhisperer.Tick, 8)
 	errs := make(chan error, 1)
 

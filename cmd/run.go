@@ -23,7 +23,7 @@ var runCmd = &cobra.Command{
 			return fmt.Errorf("invalid mode %q (use paper or live)", runMode)
 		}
 		opts := buildOptions(mode, runFlags)
-		return runSession(context.Background(), mode, opts, cmd.OutOrStdout())
+		return runSession(context.Background(), mode, opts, cmd.OutOrStdout(), runFlags.logFormat)
 	},
 }
 

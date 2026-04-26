@@ -3,6 +3,7 @@ package engine
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"math"
 	"strings"
 	"time"
@@ -16,12 +17,14 @@ import (
 )
 
 type Session struct {
-	cfg      config.Options
-	broker   broker.Client
-	llm      *llm.Client
-	guard    *risk.Guard
-	store    *store.Store
-	strategy string
+	cfg        config.Options
+	broker     broker.Client
+	marketData MarketDataProvider
+	logger     *slog.Logger
+	llm        *llm.Client
+	guard      *risk.Guard
+	store      *store.Store
+	strategy   string
 
 	cash       float64
 	position   float64
@@ -29,22 +32,30 @@ type Session struct {
 	history    []float64
 }
 
-func NewSession(cfg config.Options) (*Session, error) {
+func NewSession(cfg config.Options, brokerClient broker.Client, marketData MarketDataProvider, logger *slog.Logger) (*Session, error) {
 	if err := cfg.Validate(); err != nil {
 		return nil, err
 	}
-	client, err := broker.NewClient(cfg.Broker)
-	if err != nil {
-		return nil, err
+	if brokerClient == nil {
+		return nil, fmt.Errorf("broker client is required")
+	}
+	if marketData == nil {
+		return nil, fmt.Errorf("market data provider is required")
+	}
+	if logger == nil {
+		logger = fallbackLogger("engine")
 	}
 	db, err := store.Open(cfg.DBPath)
 	if err != nil {
 		return nil, err
 	}
+
 	return &Session{
 		cfg:        cfg,
-		broker:     client,
-		llm:        llm.NewClient(cfg),
+		broker:     brokerClient,
+		marketData: marketData,
+		logger:     logger.With(slog.String("component", "engine")),
+		llm:        llm.NewClient(cfg, logger.With(slog.String("component", "llm"))),
 		guard:      risk.NewGuard(cfg),
 		store:      db,
 		strategy:   cfg.StrategyText(),
@@ -55,6 +66,9 @@ func NewSession(cfg config.Options) (*Session, error) {
 }
 
 func (s *Session) Close() error {
+	if s.marketData != nil {
+		_ = s.marketData.Close()
+	}
 	if s.store != nil {
 		return s.store.Close()
 	}
@@ -62,15 +76,44 @@ func (s *Session) Close() error {
 }
 
 func (s *Session) Run(ctx context.Context, events chan<- quantwhisperer.Event) error {
+	tickCount := 0
 	s.emit(events, "status", fmt.Sprintf("connecting broker adapter: %s", s.broker.Name()), nil, nil, nil, time.Now().UTC())
+	s.logger.Info("broker_connecting",
+		slog.String("symbol", s.cfg.Symbol),
+		slog.Int("tick_count", tickCount),
+	)
 	if err := s.broker.Connect(ctx, s.cfg.Credentials(), s.cfg.Mode); err != nil {
+		s.logger.Error("broker_connect_failed",
+			slog.String("symbol", s.cfg.Symbol),
+			slog.Int("tick_count", tickCount),
+			slog.String("error", err.Error()),
+		)
 		return err
 	}
 	s.emit(events, "status", "broker connected", nil, nil, nil, time.Now().UTC())
+	s.logger.Info("broker_connected",
+		slog.String("symbol", s.cfg.Symbol),
+		slog.Int("tick_count", tickCount),
+	)
 
-	tickCh, errCh := s.broker.StreamTicks(ctx, s.cfg.Symbol, s.cfg.TickInterval, s.cfg.MaxTicks)
+	tickCh, err := s.marketData.Subscribe(s.cfg.Symbol)
+	if err != nil {
+		s.logger.Error("market_data_subscribe_failed",
+			slog.String("symbol", s.cfg.Symbol),
+			slog.Int("tick_count", tickCount),
+			slog.String("error", err.Error()),
+		)
+		return err
+	}
+	defer s.marketData.Close()
+
+	go func() {
+		<-ctx.Done()
+		_ = s.marketData.Close()
+	}()
 
 	for tick := range tickCh {
+		tickCount++
 		s.trackPrice(tick.LastPrice)
 		momentum := s.momentum()
 
@@ -83,14 +126,41 @@ func (s *Session) Run(ctx context.Context, events chan<- quantwhisperer.Event) e
 			Broker:    s.broker.Name(),
 			Symbol:    s.cfg.Symbol,
 			Timestamp: tick.Timestamp,
+			TickCount: tickCount,
 		})
 
 		if err := s.store.LogDecision(tick, momentum, decision, source); err != nil {
+			s.logger.Error("decision_log_failed",
+				slog.String("symbol", tick.Symbol),
+				slog.Int("tick_count", tickCount),
+				slog.Group("decision",
+					slog.String("action", decision.Action),
+					slog.Float64("confidence", decision.Confidence),
+				),
+				slog.String("error", err.Error()),
+			)
 			s.emit(events, "error", fmt.Sprintf("decision log error: %v", err), &tick, &decision, nil, tick.Timestamp)
 		}
+		s.logger.Info("decision_generated",
+			slog.String("symbol", tick.Symbol),
+			slog.Int("tick_count", tickCount),
+			slog.Group("decision",
+				slog.String("action", decision.Action),
+				slog.Float64("confidence", decision.Confidence),
+			),
+		)
 
 		snapshot := s.snapshot(tick)
 		if err := s.guard.CheckSnapshot(snapshot); err != nil {
+			s.logger.Warn("risk_wall_triggered",
+				slog.String("symbol", tick.Symbol),
+				slog.Int("tick_count", tickCount),
+				slog.Group("decision",
+					slog.String("action", decision.Action),
+					slog.Float64("confidence", decision.Confidence),
+				),
+				slog.String("error", err.Error()),
+			)
 			s.emit(events, "risk", err.Error(), &tick, &decision, nil, tick.Timestamp)
 			if err := s.store.LogSnapshot(s.cfg.Mode, snapshot); err != nil {
 				s.emit(events, "error", fmt.Sprintf("snapshot log error: %v", err), &tick, &decision, nil, tick.Timestamp)
@@ -104,12 +174,38 @@ func (s *Session) Run(ctx context.Context, events chan<- quantwhisperer.Event) e
 		if shouldTrade {
 			if s.cfg.Mode == quantwhisperer.ModeLive {
 				if err := s.broker.PlaceOrder(ctx, trade); err != nil {
+					s.logger.Error("broker_order_failed",
+						slog.String("symbol", tick.Symbol),
+						slog.Int("tick_count", tickCount),
+						slog.Group("decision",
+							slog.String("action", decision.Action),
+							slog.Float64("confidence", decision.Confidence),
+						),
+						slog.String("error", err.Error()),
+					)
 					s.emit(events, "error", fmt.Sprintf("broker order failed: %v", err), &tick, &decision, nil, tick.Timestamp)
 					continue
 				}
 			}
 			s.applyTrade(trade)
+			s.logger.Info("trade_executed",
+				slog.String("symbol", tick.Symbol),
+				slog.Int("tick_count", tickCount),
+				slog.Group("decision",
+					slog.String("action", decision.Action),
+					slog.Float64("confidence", decision.Confidence),
+				),
+			)
 			if err := s.store.LogTrade(trade); err != nil {
+				s.logger.Error("trade_log_failed",
+					slog.String("symbol", tick.Symbol),
+					slog.Int("tick_count", tickCount),
+					slog.Group("decision",
+						slog.String("action", decision.Action),
+						slog.Float64("confidence", decision.Confidence),
+					),
+					slog.String("error", err.Error()),
+				)
 				s.emit(events, "error", fmt.Sprintf("trade log error: %v", err), &tick, &decision, &trade, tick.Timestamp)
 			}
 			s.emit(events, "trade", fmt.Sprintf("%s %.0f @ %.2f", trade.Side, trade.Quantity, trade.Price), &tick, &decision, &trade, tick.Timestamp)
@@ -119,17 +215,18 @@ func (s *Session) Run(ctx context.Context, events chan<- quantwhisperer.Event) e
 
 		updated := s.snapshot(tick)
 		if err := s.store.LogSnapshot(s.cfg.Mode, updated); err != nil {
+			s.logger.Error("snapshot_log_failed",
+				slog.String("symbol", tick.Symbol),
+				slog.Int("tick_count", tickCount),
+				slog.Group("decision",
+					slog.String("action", decision.Action),
+					slog.Float64("confidence", decision.Confidence),
+				),
+				slog.String("error", err.Error()),
+			)
 			s.emit(events, "error", fmt.Sprintf("snapshot log error: %v", err), &tick, &decision, nil, tick.Timestamp)
 		}
 		s.emit(events, "snapshot", fmt.Sprintf("equity %.2f | dd %.2f%%", updated.Equity, updated.DrawdownPct), &tick, &decision, nil, tick.Timestamp)
-	}
-
-	select {
-	case err := <-errCh:
-		if err != nil && err != context.Canceled {
-			return err
-		}
-	default:
 	}
 
 	return nil
